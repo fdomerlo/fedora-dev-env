@@ -2,7 +2,7 @@
 ![platform](https://img.shields.io/badge/platform-linux-blue)
 ![shell](https://img.shields.io/badge/shell-zsh-green)
 
-# 🚀 infra-dev-env
+# 🚀 Fedora Develop Environment
 
 Plataforma de desarrollo portable basada en:
 
