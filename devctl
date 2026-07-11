@@ -1,0 +1,199 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+log() { echo -e "\n==> $1"; }
+
+# --------------------------------------------------
+# HELPERS
+# --------------------------------------------------
+
+require() {
+  command -v "$1" >/dev/null || { echo "Missing: $1"; exit 1; }
+}
+
+# --------------------------------------------------
+# HOST
+# --------------------------------------------------
+
+host_setup() {
+  log "Setting up host"
+  sudo bash "$BASE_DIR/host/setup.sh"
+}
+
+host_swap() {
+  sudo bash "$BASE_DIR/host/swap.sh"
+}
+
+host_snapper() {
+  log "Configuring snapper"
+  sudo bash "$BASE_DIR/host/snapper.sh"
+}
+
+# --------------------------------------------------
+# BOXES (Dockerfile-based)
+# --------------------------------------------------
+
+box_build() {
+  NAME="$1"
+  IMAGE="dev-$NAME"
+
+  log "Building image $IMAGE"
+
+  podman build -t "$IMAGE" "$BASE_DIR/boxes/$NAME"
+}
+
+box_create() {
+  NAME="$1"
+  IMAGE="dev-$NAME"
+
+  log "Creating distrobox $NAME"
+
+  distrobox create \
+    --name "$IMAGE" \
+    --image "$IMAGE" \
+    --init-hooks "$BASE_DIR/boxes/$NAME/init.sh"
+}
+
+box_enter() {
+  distrobox enter "dev-$1"
+}
+
+box_rebuild() {
+  NAME="$1"
+
+  log "Rebuilding $NAME"
+
+  distrobox rm -f "dev-$NAME" || true
+  podman rmi "dev-$NAME" || true
+
+  box_build "$NAME"
+  box_create "$NAME"
+}
+
+box_export() {
+  NAME="$1"
+  FILE="$HOME/${NAME}.tar"
+
+  log "Exporting $NAME → $FILE"
+
+  podman save -o "$FILE" "dev-$NAME"
+}
+
+box_import() {
+  FILE="$1"
+
+  log "Importing from $FILE"
+
+  podman load -i "$FILE"
+}
+
+# --------------------------------------------------
+# PROJECTS
+# --------------------------------------------------
+
+project_init_django() {
+  log "Creating Django project"
+
+  mkdir -p app
+  cp "$BASE_DIR/templates/django/"* app/
+
+  cp "$BASE_DIR/.envrc.template" .envrc
+
+  echo "Project ready → run: direnv allow"
+}
+
+# --------------------------------------------------
+# TOOLS
+# --------------------------------------------------
+
+doctor() {
+  log "Running diagnostics..."
+
+  check() {
+    command -v "$1" >/dev/null && echo "✔ $1" || echo "✘ $1"
+  }
+
+  check git
+  check podman
+  check distrobox
+  check btrfs
+  check snapper
+
+  echo ""
+  echo "==> Swap"
+  swapon --show || echo "No swap active"
+
+  echo ""
+  echo "==> ZRAM"
+  zramctl || echo "No zram"
+
+  echo ""
+  echo "==> Boxes"
+  distrobox list || true
+}
+
+upgrade() {
+  log "Updating infra-dev-env"
+
+  git -C "$BASE_DIR" pull
+
+  echo "Rebuild boxes? (y/n)"
+  read -r opt
+
+  if [[ "$opt" == "y" ]]; then
+    for box in python php; do
+      devctl box rebuild "$box"
+    done
+  fi
+}
+
+# --------------------------------------------------
+# COMMAND ROUTER
+# --------------------------------------------------
+
+case "${1:-}" in
+
+host)
+  case "${2:-}" in
+    setup) host_setup ;;
+    snapper) host_snapper ;;
+    swap) host_swap ;;
+  esac
+  ;;
+
+box)
+  case "${2:-}" in
+    build) box_build "$3" ;;
+    create) box_create "$3" ;;
+    enter) box_enter "$3" ;;
+    rebuild) box_rebuild "$3" ;;
+    export) box_export "$3" ;;
+    import) box_import "$3" ;;
+  esac
+  ;;
+
+project)
+  case "${2:-}" in
+    init)
+      case "${3:-}" in
+        django) project_init_django ;;
+      esac
+      ;;
+  esac
+  ;;
+
+doctor) doctor ;;
+upgrade) upgrade ;;
+
+*)
+  echo "Usage:"
+  echo " devctl host setup"
+  echo " devctl box build python"
+  echo " devctl box create python"
+  echo " devctl box enter python"
+  echo " devctl box rebuild python"
+  echo " devctl project init django"
+  ;;
+esac
