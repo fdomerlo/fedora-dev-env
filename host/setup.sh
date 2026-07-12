@@ -10,7 +10,7 @@ dnf upgrade --refresh -y
 
 echo "==> Installing base packages"
 dnf install -y \
-  git curl wget \
+  git curl wget zsh \
   podman podman-compose \
   distrobox \
   btrfs-progs \
