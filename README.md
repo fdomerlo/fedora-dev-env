@@ -27,7 +27,6 @@ Si prefieres inspeccionar el contenido localmente antes de ejecutar el despliegu
 git clone [https://github.com/fdomerlo/fedora-dotfiles.git](https://github.com/fdomerlo/fedora-dotfiles.git) ~/.dotfiles
 cd ~/.dotfiles
 ```
----
 
 ## Referencia de Comandos (devctl)
 
@@ -66,16 +65,12 @@ devctl box export python
 devctl box import python.tar
 ```
 
----
-
 ## Reglas del Entorno
 
 1. **No instalar herramientas en el host:** Todo el tooling de desarrollo debe vivir estrictamente dentro de una Box.
 2. **Evitar configuraciones manuales:** Cualquier cambio en el entorno debe ser reproducible mediante scripts o Dockerfiles.
 3. **Independencia de la distribucion:** Las Boxes deben ser portables y capaces de correr en cualquier sistema Linux compatible con Podman y Distrobox.
 4. **devctl como unica fuente de verdad:** Toda acción de automatización debe estar integrada en la CLI unificada.
-
----
 
 ## Diagnostico Integrado
 
@@ -85,8 +80,6 @@ El comando `devctl doctor` realiza las siguientes validaciones automáticas sobr
 * Configuración de subvolúmenes BTRFS y Snapper.
 * Configuración y dimensionamiento de swap y zram.
 * Integridad de las Boxes de desarrollo instaladas en el host.
----
-
 ---
 
 ## Contribuciones y Soporte
