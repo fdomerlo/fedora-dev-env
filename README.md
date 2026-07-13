@@ -2,122 +2,38 @@
 ![platform](https://img.shields.io/badge/platform-linux-blue)
 ![shell](https://img.shields.io/badge/shell-zsh-green)
 
-# 🚀 Fedora Develop Environment
+# Fedora Development Environment
 
-Plataforma de desarrollo portable basada en:
+Aprovisionamiento de desarrollo portable basada en Fedora Workstation, Podman, Distrobox y virtualización ligera.
 
-- Fedora Workstation (host)
-- Podman + Distrobox (entornos reproducibles)
-- devctl (CLI unificada)
-- BTRFS + Snapper + zram + swap fallback
+* **Host:** Sistema base mínimo, limpio y descartable.
+* **Boxes:** Contenedores donde vive el entorno de desarrollo real y sus dependencias.
+* **Proyectos:** Directorios de trabajo locales mapeados de forma de desarrollo reproducible.
 
----
+## Instalacion
 
-## 🧠 Filosofía
-
-Este proyecto separa claramente:
-
-- 🧱 Host → mínimo, descartable
-- 📦 Boxes → donde vive el entorno real
-- 📁 Proyectos → reproducibles
-
-> ❗ El entorno NO vive en el sistema operativo.
-
----
-
-## ⚡ Instalación (One-liner)
+### Opcion 1: Instalacion rapida (Recomendado)
+Asegura las dependencias base, clona el repositorio y despliega la ayuda interactiva del Makefile:
 
 ```bash
 sudo dnf install -y git make && git clone https://github.com/fdomerlo/fedora-dotfiles.git ~/.dotfiles && make -C ~/.dotfiles help
-````
-
----
-
-## 🔐 Seguridad (recomendado)
-
-Revisar antes de ejecutar:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/fdomerlo/fedora-dev-env/main/bootstrap.sh
 ```
 
----
+### Opcion 2: Instalacion manual
 
-## ⚙️ Instalación manual
-
-```bash
-git clone https://github.com/fdomerlo/fedora-dev-env.git
-cd fedora-dev-env
-./install.sh
-```
-
----
-
-## 🤖 Modo no interactivo (CI / power users)
+Si prefieres inspeccionar el contenido localmente antes de ejecutar el despliegue:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/fdomerlo/fedora-dev-env/main/bootstrap.sh | NON_INTERACTIVE=true bash
+git clone [https://github.com/fdomerlo/fedora-dotfiles.git](https://github.com/fdomerlo/fedora-dotfiles.git) ~/.dotfiles
+cd ~/.dotfiles
 ```
-
 ---
 
-## 🧱 Setup inicial
+## Referencia de Comandos (devctl)
 
-```bash
-devctl host setup
-devctl host snapper
-devctl host swap
-```
+### Gestion de Boxes (Entornos de desarrollo)
 
----
-
-## 📦 Entornos (boxes)
-
-```bash
-devctl box build python
-devctl box create python
-
-devctl box build php
-devctl box create php
-```
-
----
-
-## 💻 Uso diario
-
-Entrar al entorno:
-
-```bash
-devctl box enter python
-```
-
----
-
-## 🚀 Crear proyecto Django
-
-```bash
-mkdir myproject
-cd myproject
-
-devctl project init django
-direnv allow
-```
-
----
-
-## 🔧 Comandos principales
-
-### 🧱 Host
-
-```bash
-devctl host setup
-devctl host snapper
-devctl host swap
-```
-
----
-
-### 📦 Boxes
+Crea, destruye y administra contenedores Distrobox aislados por lenguaje o tecnología.
 
 ```bash
 devctl box build python
@@ -126,26 +42,24 @@ devctl box enter python
 devctl box rebuild python
 ```
 
----
+### Inicializacion de Proyectos
 
-### 📁 Proyectos
+Configura plantillas locales y entornos virtuales integrados con direnv.
 
 ```bash
+mkdir mi-proyecto && cd mi-proyecto
 devctl project init django
+direnv allow
 ```
 
----
-
-### 🧠 Sistema
+### Mantenimiento y Diagnostico
 
 ```bash
-devctl doctor
-devctl upgrade
+devctl doctor     # Verifica dependencias, podman, snapper, swap y boxes activos
+devctl upgrade    # Actualiza los scripts locales y reconstruye los entornos
 ```
 
----
-
-### 📦 Portabilidad
+### Portabilidad
 
 ```bash
 devctl box export python
@@ -154,118 +68,29 @@ devctl box import python.tar
 
 ---
 
-## 🧪 Diagnóstico
+## Reglas del Entorno
 
-```bash
-devctl doctor
-```
-
-Valida:
-
-* podman
-* distrobox
-* btrfs
-* snapper
-* swap / zram
-* boxes existentes
+1. **No instalar herramientas en el host:** Todo el tooling de desarrollo debe vivir estrictamente dentro de una Box.
+2. **Evitar configuraciones manuales:** Cualquier cambio en el entorno debe ser reproducible mediante scripts o Dockerfiles.
+3. **Independencia de la distribucion:** Las Boxes deben ser portables y capaces de correr en cualquier sistema Linux compatible con Podman y Distrobox.
+4. **devctl como unica fuente de verdad:** Toda acción de automatización debe estar integrada en la CLI unificada.
 
 ---
 
-## 🔄 Actualización
+## Diagnostico Integrado
 
-```bash
-devctl upgrade
-```
+El comando `devctl doctor` realiza las siguientes validaciones automáticas sobre el sistema de destino:
+
+* Estado y permisos de ejecución de Podman y Distrobox.
+* Configuración de subvolúmenes BTRFS y Snapper.
+* Configuración y dimensionamiento de swap y zram.
+* Integridad de las Boxes de desarrollo instaladas en el host.
+---
 
 ---
 
-## 💻 Shell (Zsh)
+## Contribuciones y Soporte
 
-Por defecto se instala una configuración mínima:
+Las contribuciones para mejorar los scripts, optimizar las Boxes o añadir soporte a nuevos entornos son bienvenidas. Consulta las pautas de desarrollo en nuestro archivo [CONTRIBUTING.md](CONTRIBUTING.md).
 
-* rápida
-* portable
-* sin dependencias externas
-
----
-
-## ✨ Oh My Zsh (opcional)
-
-Para quienes lo necesiten:
-
-```bash
-devctl shell ohmyzsh
-```
-
-O desde el menú interactivo.
-
----
-
-## 🧠 Reglas del equipo
-
-### ❗ 1. No instalar tooling en el host
-
-Todo debe vivir en boxes.
-
----
-
-### ❗ 2. Nada manual
-
-Todo debe ser reproducible vía scripts.
-
----
-
-### ❗ 3. Nada dependiente de distro
-
-Los entornos deben funcionar en cualquier Linux.
-
----
-
-### ❗ 4. devctl es la fuente de verdad
-
-Si no está en devctl, no existe.
-
----
-
-## 🧱 Arquitectura
-
-```
-Host (Fedora)
- ├── podman
- ├── distrobox
- ├── snapper
- └── zsh
-
-Boxes
- ├── dev-python
- ├── dev-php
- └── dev-ai (futuro)
-
-Projects
- └── templates + direnv
-```
-
----
-
-## 🔥 Qué resuelve
-
-* ❌ "funciona en mi máquina"
-* ❌ setups manuales
-* ❌ dependencia de distro
-* ❌ entornos inconsistentes
-
----
-
-## 🚀 Roadmap
-
-* devctl doctor (extendido)
-* registry de boxes
-* integración con Proxmox
-* entornos remotos
-* cache distribuido
-
----
-
-## 👨‍💻 Autor
-
-Fernando Merlo
+Si este entorno te ha sido de utilidad para simplificar tu flujo de trabajo diario, considera otorgarle una **estrella (★)** al repositorio. Esto ayuda a mejorar la visibilidad del proyecto para que otros desarrolladores puedan encontrarlo y beneficiarse de él.
