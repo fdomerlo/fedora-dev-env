@@ -34,9 +34,6 @@ fi
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-# --- Funciones y alias personalizados ---
-[ -f "$HOME/.functions.sh" ] && source "$HOME/.functions.sh"
-
 # --- Prompt personalizado con vcs_info ---
 setopt prompt_subst
 autoload -Uz vcs_info

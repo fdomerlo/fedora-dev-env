@@ -10,10 +10,11 @@ dnf upgrade --refresh -y
 
 echo "==> Installing base packages"
 dnf install -y \
-  git curl wget zsh \
-  podman podman-compose \
+  git curl wget \
+  fira-code-fonts zip unzip \
+  podman podman-compose podman-docker \
   distrobox \
-  btrfs-progs \
+  btrfs-progs btrfs-assistant \
   snapper python3-dnf-plugin-snapper
 
 echo "==> Enabling podman socket"

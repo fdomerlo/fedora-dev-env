@@ -15,42 +15,57 @@ export CHSH=no
 help:
 	@echo "Opciones de instalación:"
 	@echo "  make install    - Aprovisiona la estación de trabajo completa (Host + Shell + Dev)"
-	@echo "  make host       - Configura repositorios, DNF, paquetes base y Snapper"
+	@echo "  make host       - Configura repositorios, DNF, paquetes base, Snapper y devtools"
 	@echo "  make shell      - Configura Zsh, Oh My Zsh y copia dotfiles"
+	@echo "  make devtools    - Instala herramientas de desarrollo y gestores de paquetes"
 	@echo "  make containers - Prepara el entorno de contenedores (Distrobox/Podman)"
 	@echo "  make clean      - Elimina archivos temporales de la instalación"
 
-# El comando maestro
-install: host shell containers
+# El comando maestro (Se ejecuta como usuario NORMAL)
+install: host shell devtools containers clean
 	@echo -e "\n✅ Instalación finalizada. Reinicia la terminal o el equipo para aplicar todos los cambios."
 
-# Fase 1: Sistema y Host
+# Sistema y Host (Pedirá sudo de manera selectiva)
 host:
 	@echo "==> Configurando Host (Fedora)..."
-	bash host/setup.sh
-	bash host/snapper.sh
-	# Nota: Fedora usa zram nativo, esto se usa para evitar un eventual OOM
-	bash host/swap.sh 
+	sudo bash host/setup.sh
+	sudo bash host/snapper.sh
+	sudo bash host/swap.sh 
 
-# Fase 2: Entorno de usuario (Shell y Dotfiles)
+# Entorno de usuario (Shell y Dotfiles)
 shell:
 	@echo "==> Configurando Zsh y Dotfiles..."
-	bash shell/ohmyzsh.sh
-	# Crear enlaces simbólicos (symlinks) en lugar de copiar
+	bash scripts/ohmyzsh.sh
 	ln -sf $(PWD)/shell/zshrc $(HOME)/.zshrc
-	ln -sf $(PWD)/shell/functions.sh $(HOME)/.functions.sh
 	ln -sf $(PWD)/shell/gitconfig $(HOME)/.gitconfig
 
-# Fase 3: Tooling y Contenedores
+# Entorno de desarrollo
+devtools:
+	@echo "==> Instalando devtools..."
+	bash scripts/devtools.sh
+	bash scripts/setup_gh.sh
+		
+# Entornos AI 
+devai:
+	@echo "==> Instalando herramientas de AI..."
+	curl -fsSL https://opencode.ai/install | bash
+	curl -fsSL https://antigravity.google/cli/install.sh | bash
+	bash scripts/setup_agy.sh
+
+# Tooling y Contenedores
 containers:
-	@echo "==> Configurando contenedores y Devctl..."
-	# Asumiendo que devctl gestiona los boxes
-	chmod +x devctl
-	./devctl setup
-	# Instalación de uv
-	curl -LsSf https://astral.sh/uv/install.sh | sh
+	@echo "==> Preparando entorno de contenedores..."
+	chmod +x shell/devctl
+	mkdir -p $(HOME)/.local/bin
+	ln -sf $(PWD)/shell/devctl $(HOME)/.local/bin/devctl
+
+	@echo "Devctl listo. Usa:"
+	@echo "  ./devctl box create php"
+	@echo "  ./devctl box create python"
 
 # Utilidad para limpiar restos si algo falla
 clean:
-	@echo "==> Limpiando..."
+	@echo "==> Limpiando caches y residuales..."
+	sudo dnf autoremove -y
+	sudo dnf clean all
 	rm -rf $(HOME)/.oh-my-zsh.tmp || true

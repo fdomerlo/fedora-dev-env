@@ -20,18 +20,14 @@ require() {
 box_build() {
   NAME="$1"
   IMAGE="dev-$NAME"
-
   log "Building image $IMAGE"
-
   podman build -t "$IMAGE" "$BASE_DIR/boxes/$NAME"
 }
 
 box_create() {
   NAME="$1"
   IMAGE="dev-$NAME"
-
   log "Creating distrobox $NAME"
-
   distrobox create \
     --name "$IMAGE" \
     --image "$IMAGE" \
@@ -44,12 +40,9 @@ box_enter() {
 
 box_rebuild() {
   NAME="$1"
-
   log "Rebuilding $NAME"
-
   distrobox rm -f "dev-$NAME" || true
   podman rmi "dev-$NAME" || true
-
   box_build "$NAME"
   box_create "$NAME"
 }
@@ -57,17 +50,13 @@ box_rebuild() {
 box_export() {
   NAME="$1"
   FILE="$HOME/${NAME}.tar"
-
   log "Exporting $NAME → $FILE"
-
   podman save -o "$FILE" "dev-$NAME"
 }
 
 box_import() {
   FILE="$1"
-
   log "Importing from $FILE"
-
   podman load -i "$FILE"
 }
 
@@ -80,9 +69,7 @@ project_init_django() {
 
   mkdir -p app
   cp "$BASE_DIR/templates/django/"* app/
-
   cp "$BASE_DIR/.envrc.template" .envrc
-
   echo "Project ready → run: direnv allow"
 }
 
